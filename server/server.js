@@ -12,6 +12,7 @@ net.createServer(function(socket) {
 
   // When the server receives a message from a client
   socket.on('data', function (data) {
+    socket.write("Received: " + data + " at " + Date.now().toString());
     broadcast(Date.now() + data, socket);
   });
 
