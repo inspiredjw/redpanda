@@ -8,8 +8,8 @@
   },
   "main": "index.js",
   "scripts": {
-    "plain": "node ./server/server.js",
-    "start": "forever stopall && forever start ./server/server.js",
+    "dev": "node ./server/server.js",
+    "start": "forever stopall && forever -a -o out.log -e err.log start ./server/server.js",
     "stop": "forever stopall"
   },
   "author": "",
