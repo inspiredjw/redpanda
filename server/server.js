@@ -20,7 +20,7 @@ net.createServer(function(socket) {
     clients.splice(clients.indexOf(socket), 1);
     broadcast(socket.name + ' Left the chat\n');
   });
-}).listen(process.env.PORT || 3000);
+}).listen(3000);
 
 
 // List of clients
