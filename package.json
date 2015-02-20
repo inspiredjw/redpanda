@@ -8,7 +8,9 @@
   },
   "main": "index.js",
   "scripts": {
-    "start": "node ./server/server.js"
+    "plain": "node ./server/server.js",
+    "start": "forever stopall && forever start ./server/server.js",
+    "stop": "forever stopall"
   },
   "author": "",
   "license": "MIT"
