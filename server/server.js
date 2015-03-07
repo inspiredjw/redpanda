@@ -1,5 +1,14 @@
 var net = require('net');
+var dgram = require('dgram');
+var udpServer = dgram.createSocket('udp4');
 
+var port = 3000;
+
+var onMessage = function(data) {
+  var buffer = Date.now() + data;
+  socket.write(buffer);
+  broadcast(buffer, socket);
+};
 
 // TCP server
 net.createServer(function(socket) {
@@ -11,7 +20,7 @@ net.createServer(function(socket) {
   broadcast(socket.name + ' joined the chat\n', socket);
 
   // When the server receives a message from a client
-  socket.on('data', function (data) {
+  socket.on('data', function(data) {
     var buffer = Date.now() + data;
     socket.write(buffer);
     broadcast(buffer, socket);
@@ -22,7 +31,7 @@ net.createServer(function(socket) {
     clients.splice(clients.indexOf(socket), 1);
     broadcast(socket.name + ' Left the chat\n');
   });
-}).listen(3000);
+}).listen(port);
 
 
 // List of clients
@@ -37,9 +46,23 @@ var refineIP = function(rawIP) {
 // Broadcast
 var broadcast = function(message, sender) {
   clients.forEach(function(client) {
-    if (client !== sender) {
-      client.write(message);
-    }
+    client.write(message);
   });
-  process.stdout.write(message);
+  process.stdout.write(message + '\n');
 };
+
+
+// UDP server
+udpServer.on('message', function(data) {
+  var buffer = Date.now() + data;
+
+
+  clients.forEach(function(client) {
+    udpServer.send(buffer, 0, buffer.length, client.remotePort, client.remoteAddress, function(err, bytes) {
+      if (err) console.error(err.message);
+    });
+  });
+});
+
+udpServer.bind(port);
+
