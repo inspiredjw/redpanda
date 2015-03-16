@@ -24,11 +24,14 @@ function broadcast(message, client) {
   for (var i = 0;i < clientList.length; i += 1) {
     if (client !== clientList[i]) {
       if (clientList[i].writable) {
-        clientList[i].write(client.name + " says " + message);
+        clientList[i].write(message);
       } else {
         cleanup.push(clientList[i]);
         clientList[i].destroy();
       }
+    }
+    else {
+      client.write(message);
     }
   }
   for (i = 0;i < cleanup.length; i += 1) {
