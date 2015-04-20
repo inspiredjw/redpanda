@@ -5,6 +5,8 @@ var tcpServer = net.createServer(),
     udpServer = dgram.createSocket('udp4'),
     clientList = [];
 
+var logicalStamp = 0;
+
 tcpServer.on('connection', function(client) {
   client.name = client.remoteAddress + ':' + client.remotePort;
   // client.write('Hi ' + client.name + '!\n');
@@ -12,7 +14,7 @@ tcpServer.on('connection', function(client) {
   clientList.push(client);
 
   client.on('data', function(data) {
-    var buffer = Date.now() + data;
+    var buffer = logicalStamp++ + ':' + data;
     broadcast(buffer, client);
   });
 
@@ -43,9 +45,8 @@ function broadcast(message, client) {
 
 tcpServer.listen(3000);
 
-
 udpServer.on('message', function(message, remote) {
-  var buffer = Date.now() + data;
+  var buffer = data;
 
   for (var i = 0; i < clientList.length; i++) {
     udpServer.send(buffer, 0, buffer.length, 3001, clientList[i].name.split()[0]);
