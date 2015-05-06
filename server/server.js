@@ -67,6 +67,10 @@ function _makeSureToHaveHistory(userId) {
 function parseClientMessage(data, func, client) {
   data = data.toString();
   var parts = data.split(':');
+  var isLate = false;
+  var isJump = false;
+  var lateValue = 0;
+  var jumpValue = 0;
 
   // need to be form of "userId:logicalStamp:message"
   if (parts.length < 3)
@@ -91,6 +95,8 @@ function parseClientMessage(data, func, client) {
   }
   // late Message Case
   else if (history[userId].unreceived[stamp]) {
+    isLate = true;
+    lateValue = history[userId].unreceived[stamp];
     delete history[userId].unreceived[stamp];
     if (history[userId].seq + 1 == stamp)
       history[userId].seq++;
@@ -99,10 +105,17 @@ function parseClientMessage(data, func, client) {
   else if (history[userId].seq + 1 < stamp && history[userId].latest != stamp && (history[userId].latest < stamp || history[userId].unreceived[stamp])) {
     var oldLatest = history[userId].latest,
         newLatest = stamp;
+    var jumperCnt = 0;
+
+    isJump = true;
 
     // record missing messages
-    for (var i = parseInt(oldLatest) + 1; i < parseInt(newLatest); i++)
-      history[userId].unreceived[i] = true;
+    for (var i = parseInt(oldLatest) + 1; i < parseInt(newLatest); i++) {
+      jumperCnt++;
+      history[userId].unreceived[i] = globalStamp + jumperCnt;
+    }
+
+    globalStamp += (newLatest - oldLatest);
 
     // set new latest
     if (history[userId].latest < newLatest)
@@ -118,8 +131,17 @@ function parseClientMessage(data, func, client) {
   }
 
   // broadcast buffer with globalStamp
-  globalStamp++;
-  var buffer = globalStamp + ':' + message;
+  var buffer;
+  if (isLate) {
+    buffer = lateValue + ':' + message;
+  }
+  else if (isJump) {
+    buffer = globalStamp + ':' + message;
+  }
+  else {
+    globalStamp++;
+    buffer = globalStamp + ':' + message;
+  }
   func(buffer, client);
 }
 
@@ -130,19 +152,3 @@ udpServer.on('message', function(message, remote) {
 });
 
 udpServer.bind(3001);
-
-/*
-i:1:1111
-1:1111
-i:3:2222
-2:2222
-i:2:2222
-3:2222
-i:5:sdfdsf
-4:sdfdsf
-i:4:dsfdsfsf
-(한번 미싱 해주고.. 복구하고 두번째 미싱 했을때부터는 그냥 이미 보낸거로 되는 문제가 있음;;)
-이거 해결좀...
-*/
-
-
