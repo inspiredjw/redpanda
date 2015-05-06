@@ -10,11 +10,13 @@ var history = {};
 var globalStamp = 0;
 
 tcpServer.on('connection', function(client) {
+  console.log('tcp connection made!');
   client.name = client.remoteAddress + ':' + client.remotePort;
 
   clientList.push(client);
 
   client.on('data', function(data) {
+    console.log(Date.now() + ' (TCP) > ' + data);
     parseClientMessage(data, broadcastTCP, client);
   });
 
@@ -48,7 +50,7 @@ function broadcastUDP(message) {
   var buffer = message;
 
   for (var i = 0; i < clientList.length; i++) {
-    udpServer.send(buffer, 0, buffer.length, 3001, clientList[i].name.split()[0]);
+    udpServer.send(buffer, 0, buffer.length, 3001, clientList[i].name.split(':')[3]);
   }
 }
 
@@ -142,12 +144,14 @@ function parseClientMessage(data, func, client) {
     globalStamp++;
     buffer = globalStamp + ':' + message;
   }
+
   func(buffer, client);
 }
 
 tcpServer.listen(3000);
 
 udpServer.on('message', function(message, remote) {
+  console.log(Date.now() + ' (UDP) > ' + message);
   parseClientMessage(message, broadcastUDP);
 });
 
